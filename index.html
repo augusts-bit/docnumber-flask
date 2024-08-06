@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocNr generator</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .buttons {
+            margin: 10px;
+        }
+        .buttons button {
+            font-size: 1.5rem; /* Increase font size */
+            padding: 15px 30px; /* Increase padding */
+            width: 200px; /* Set a fixed width */
+            cursor: pointer; /* Change cursor to pointer on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form method="post">
+            <div class="buttons">
+                <button type="submit" name="button1">gebruikte nummers</button>
+                <button type="submit" name="button2">nieuw nummer</button>
+            </div>
+        </form>
+        {% if string is not none %}
+        <h1>{{ string }}</h1>
+        {% endif %}
+        <form method="post">
+        <div class="buttons">
+            <button type="submit" name="button3">download nummers</button>
+        </div>
+        </form>
+    </div>
+</body>
+</html>
