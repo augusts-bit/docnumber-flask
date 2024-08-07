@@ -16,12 +16,12 @@ def index():
     if os.path.isfile('mysite/docnummers/docnummers.csv'):
         doc_nrs = pd.read_csv('mysite/docnummers/docnummers.csv', sep=";")
     else:
-        doc_nrs = pd.DataFrame(data={'ID': []})
+        doc_nrs = pd.DataFrame(data={'DocID': []})
 
-    # Prefix
+    # Prefix with year
     prefix = "D" + str(datetime.now().year)[-2:]
 
-    # Function to extract the numeric part after the prefix
+    # Function to extract the numeric part after the prefix (with year)
     def extract_number(input_string):
         # return int(input_string.replace(prefix, ""))
         match = re.search(r'{}(\d+)'.format(prefix), input_string)
@@ -38,17 +38,20 @@ def index():
     # User input
     if request.method == 'POST':
 
+        # All docnumbers of the current year
+        docnrs_current_year = [int(get_digits(value)) for value in doc_nrs['DocID'] if value.startswith(prefix)]
+
         # Which numbers are used
         if 'button1' in request.form:
 
             # Check what the last added number is
-            if not doc_nrs.empty:
-                # last_item = doc_nrs['ID'].iloc[-1] # last entried
-                # last_item = sorted(doc_nrs['ID'].astype(str).tolist())[-1] # continu with chronological last number
-                last_item = "D" + str(max([int(get_digits(value)) for value in doc_nrs['ID'] if value.startswith(prefix)])).zfill(3) # max number of this year
-                string = "t/m " + last_item + " is in gebruik voor dit jaar"
+            if len(docnrs_current_year) > 0: # or doc_nrs.empty for full list:
+                # last_item = doc_nrs['DocID'].iloc[-1] # last entried
+                if max(docnrs_current_year, default=None) != None:
+                    last_item = "D" + str(max(docnrs_current_year, default=None)).zfill(3) # max number of this year
+                    string = "t/m " + last_item + " is in gebruik voor dit jaar"
             else:
-                string = "nog geen nummers zijn in gebruik"
+                string = "nog geen nummers zijn in gebruik voor dit jaar"
 
             return render_template('index.html', string=string)
 
@@ -56,18 +59,12 @@ def index():
         elif 'button2' in request.form:
 
             # Check what the last added number is
-            if not doc_nrs.empty:
-                # last_item = doc_nrs['ID'].iloc[-1]
-                # last_item = sorted(doc_nrs['ID'].astype(str).tolist())[-1] # continu with chronological last number
-                last_item = "D" + str(max([int(get_digits(value)) for value in doc_nrs['ID'] if value.startswith(prefix)])).zfill(3)
-
-                # Check if you are in new year, then start with str(1).zfill(3)
-                if last_item.startswith(prefix): # same year
+            if len(docnrs_current_year) > 0:
+                # last_item = doc_nrs['DocID'].iloc[-1]
+                if max(docnrs_current_year, default=None) != None:
+                    last_item = "D" + str(max(docnrs_current_year, default=None)).zfill(3)
                     nummer = extract_number(last_item) + 1
                     nummer_str = prefix + str(nummer).zfill(3)
-                    string = "nieuw nummer: " + nummer_str
-                else: # new year
-                    nummer_str = prefix + str(1).zfill(3) # --> 001
                     string = "nieuw nummer: " + nummer_str
 
             else:
@@ -76,8 +73,8 @@ def index():
                 string = "nieuw nummer: " + nummer_str
 
             # Append, save and return if number dont exist
-            if nummer_str not in doc_nrs['ID'].tolist():
-                doc_nrs = doc_nrs.append({'ID': nummer_str}, ignore_index=True)
+            if nummer_str not in doc_nrs['DocID'].tolist():
+                doc_nrs = doc_nrs.append({'DocID': nummer_str}, ignore_index=True)
                 doc_nrs.to_csv('mysite/docnummers/docnummers.csv', sep=";", index=False)
             else:
                 string = "nummer bestaat al: " + nummer_str
@@ -96,7 +93,6 @@ def index():
             filename = filename.replace(" ", "")
             response.headers.set("Content-Disposition", "attachment", filename=filename)
             return response
-
 
     # Display the HTML form template with no input
     return render_template('index.html', string=None)
